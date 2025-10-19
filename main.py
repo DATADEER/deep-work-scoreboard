@@ -6,10 +6,15 @@ def get_image(month):
     WEEKS = len(month)  # 4
     DAYS_PER_WEEK = len(month[0])  # 7
 
+    CIRCLE_SIZE = 45
+    CIRCLE_OUTLINE_WIDTH = 3
+    WEEK_MARGIN = CIRCLE_SIZE / 3
+    DAY_MARGIN = CIRCLE_SIZE / 3
+
     BOUNDARY_X_UPPER_LEFT = 200
     BOUNDARY_Y_UPPER_LEFT = 100
     BOUNDARY_X_LOWER_RIGHT = 600
-    BOUNDARY_Y_LOWER_RIGHT = 380
+    BOUNDARY_Y_LOWER_RIGHT = BOUNDARY_Y_UPPER_LEFT + (CIRCLE_SIZE + WEEK_MARGIN) * WEEKS - WEEK_MARGIN
 
     # Trying to calculate the ultimate circle and margin size for our boundary
     # BOUNDARY_WIDTH = BOUNDARY_X_LOWER_RIGHT - BOUNDARY_X_UPPER_LEFT
