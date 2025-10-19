@@ -1,0 +1,7 @@
+# Project exclude paths
+/.
+pyvenv.cfg
+lib
+include
+bin
+.idea
