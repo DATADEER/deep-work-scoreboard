@@ -34,19 +34,23 @@ def get_image(month):
     draw = ImageDraw.Draw(image)
 
 
-    # Boundary Visualisation for Debug
+    # Boundary Visualisation of Child Rect for Debug
     center = get_rect_center((0, 0), (SCREEN_WIDTH, SCREEN_HEIGHT))
-    width, height = get_rect_size_by_content(circle_size=CIRCLE_SIZE, week_margin=WEEK_MARGIN, day_margin=DAY_MARGIN, days_count=DAYS_PER_WEEK, weeks_count=WEEKS_PER_MONTH)
-    upper_left_coords,lower_right_coords = get_centered_rect_bounds(center, width,height)
-    # draw.rectangle((upper_left_coords, lower_right_coords), fill=(230, 230, 100))
+    child_rect_width, child_rect_height = get_rect_size_by_content(circle_size=CIRCLE_SIZE, week_margin=WEEK_MARGIN, day_margin=DAY_MARGIN, days_count=DAYS_PER_WEEK, weeks_count=WEEKS_PER_MONTH)
+    child_rect_upper_left_coords,child_rect_lower_right_coords = get_centered_rect_bounds(center, child_rect_width,child_rect_height)
+    draw.rectangle((child_rect_upper_left_coords, child_rect_lower_right_coords), fill=(230, 230, 100))
 
 
     for week_index, week in enumerate(month):
-        week_x_upper_left = BOUNDARY_X_UPPER_LEFT
-        week_y_upper_left = BOUNDARY_Y_UPPER_LEFT + (week_index * CIRCLE_SIZE) + (week_index * WEEK_MARGIN)
-        # week_x_lower_right = BOUNDARY_X_UPPER_LEFT + CIRCLE_SIZE
-        week_y_lower_right = BOUNDARY_Y_UPPER_LEFT + CIRCLE_SIZE + (week_index * CIRCLE_SIZE) + (
-                week_index * WEEK_MARGIN)
+        week_x_upper_left = child_rect_upper_left_coords[0]
+        # TODO: do we need to skip the last WEEK_MARGIN?
+        week_y_upper_left = child_rect_upper_left_coords[1] + (week_index * CIRCLE_SIZE) + (week_index * WEEK_MARGIN)
+        week_x_lower_right = week_x_upper_left + child_rect_width
+        # TODO: do we need to skip the last WEEK_MARGIN?
+        week_y_lower_right = week_y_upper_left + CIRCLE_SIZE
+
+        #draw.rectangle(((week_x_upper_left,week_y_upper_left),(week_x_lower_right,week_y_lower_right)), fill=(30,230, 100 + (week_index * 50)))
+        #draw.line(((week_x_upper_left, week_y_upper_left), (week_x_lower_right, week_y_lower_right)), fill=(0, 0, 0))
 
         for day_index, day in enumerate(week):
             day_x_upper_left = week_x_upper_left + (day_index * DAY_MARGIN) + (day_index * CIRCLE_SIZE)
