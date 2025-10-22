@@ -38,7 +38,7 @@ def get_image(month):
     center = get_rect_center((0, 0), (SCREEN_WIDTH, SCREEN_HEIGHT))
     child_rect_width, child_rect_height = get_rect_size_by_content(circle_size=CIRCLE_SIZE, week_margin=WEEK_MARGIN, day_margin=DAY_MARGIN, days_count=DAYS_PER_WEEK, weeks_count=WEEKS_PER_MONTH)
     child_rect_upper_left_coords,child_rect_lower_right_coords = get_centered_rect_bounds(center, child_rect_width,child_rect_height)
-    draw.rectangle((child_rect_upper_left_coords, child_rect_lower_right_coords), fill=(230, 230, 100))
+    # draw.rectangle((child_rect_upper_left_coords, child_rect_lower_right_coords), fill=(230, 230, 100))
 
 
     for week_index, week in enumerate(month):
