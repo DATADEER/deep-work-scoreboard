@@ -43,11 +43,9 @@ def get_image(month):
 
     for week_index, week in enumerate(month):
         week_x_upper_left = child_rect_upper_left_coords[0]
-        # TODO: do we need to skip the last WEEK_MARGIN?
         week_y_upper_left = child_rect_upper_left_coords[1] + (week_index * CIRCLE_SIZE) + (week_index * WEEK_MARGIN)
         week_x_lower_right = week_x_upper_left + child_rect_width
-        # TODO: do we need to skip the last WEEK_MARGIN?
-        week_y_lower_right = week_y_upper_left + CIRCLE_SIZE
+        week_y_lower_right = week_y_upper_left + CIRCLE_SIZE + WEEK_MARGIN
 
         #draw.rectangle(((week_x_upper_left,week_y_upper_left),(week_x_lower_right,week_y_lower_right)), fill=(30,230, 100 + (week_index * 50)))
         #draw.line(((week_x_upper_left, week_y_upper_left), (week_x_lower_right, week_y_lower_right)), fill=(0, 0, 0))
@@ -56,7 +54,7 @@ def get_image(month):
             day_x_upper_left = week_x_upper_left + (day_index * DAY_MARGIN) + (day_index * CIRCLE_SIZE)
             day_y_upper_left = week_y_upper_left
             day_x_lower_right = day_x_upper_left + CIRCLE_SIZE
-            day_y_lower_right = week_y_lower_right
+            day_y_lower_right = day_y_upper_left + CIRCLE_SIZE
 
             fill = FILL_DEEP_WORK_DAY if day == 1 else FILL_NON_DEEP_WORK_DAY
             outline = OUTLINE_DEEP_WORK_DAY if day == 1 else OUTLINE_NON_DEEP_WORK_DAY
