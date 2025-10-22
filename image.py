@@ -1,32 +1,27 @@
 from PIL import Image, ImageDraw
-from helper import get_rect_center,get_centered_rect_bounds
+from helper import get_rect_center,get_centered_rect_bounds, get_rect_size_by_content
 
 def get_image(month):
-    WEEKS = len(month)  # 4
+    WEEKS_PER_MONTH = len(month)  # 4
     DAYS_PER_WEEK = len(month[0])  # 7
+
+    SCREEN_WIDTH = 800
+    SCREEN_HEIGHT = 480
 
     CIRCLE_SIZE = 45
     CIRCLE_OUTLINE_WIDTH = 3
     WEEK_MARGIN = CIRCLE_SIZE / 3
     DAY_MARGIN = CIRCLE_SIZE / 3
 
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 480
-
     BOUNDARY_X_UPPER_LEFT = 200
     BOUNDARY_Y_UPPER_LEFT = 100
     BOUNDARY_X_LOWER_RIGHT = 600
-    BOUNDARY_Y_LOWER_RIGHT = BOUNDARY_Y_UPPER_LEFT + (CIRCLE_SIZE + WEEK_MARGIN) * WEEKS - WEEK_MARGIN
+    BOUNDARY_Y_LOWER_RIGHT = BOUNDARY_Y_UPPER_LEFT + (CIRCLE_SIZE + WEEK_MARGIN) * WEEKS_PER_MONTH - WEEK_MARGIN
 
     # Trying to calculate the ultimate circle and margin size for our boundary
     # BOUNDARY_WIDTH = BOUNDARY_X_LOWER_RIGHT - BOUNDARY_X_UPPER_LEFT
     # BOUNDARY_HEIGHT = BOUNDARY_Y_LOWER_RIGHT - BOUNDARY_Y_UPPER_LEFT
     # FILL_SIZE = BOUNDARY_WIDTH
-
-    CIRCLE_SIZE = 45
-    CIRCLE_OUTLINE_WIDTH = 3
-    WEEK_MARGIN = CIRCLE_SIZE / 3
-    DAY_MARGIN = CIRCLE_SIZE / 3
 
     FILL_DEEP_WORK_DAY = (0, 0, 0)
     OUTLINE_DEEP_WORK_DAY = None
@@ -41,9 +36,9 @@ def get_image(month):
 
     # Boundary Visualisation for Debug
     center = get_rect_center((0, 0), (SCREEN_WIDTH, SCREEN_HEIGHT))
-    # TODO: Calculate the boundary size based on it's content
-    # upper_left_coords,lower_right_coords = get_centered_rect_bounds(center, 400,50)
-    # draw.rectangle((upper_left_coords, lower_right_coords), fill=(230, 230, 230))
+    width, height = get_rect_size_by_content(circle_size=CIRCLE_SIZE, week_margin=WEEK_MARGIN, day_margin=DAY_MARGIN, days_count=DAYS_PER_WEEK, weeks_count=WEEKS_PER_MONTH)
+    upper_left_coords,lower_right_coords = get_centered_rect_bounds(center, width,height)
+    # draw.rectangle((upper_left_coords, lower_right_coords), fill=(230, 230, 100))
 
 
     for week_index, week in enumerate(month):

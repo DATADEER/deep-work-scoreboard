@@ -16,7 +16,7 @@ args = parser.parse_args()
 image = get_image(MONTH)
 
 if(args.display):
-    print("printing to inky impression")
+    print("printing to inky impbression")
     from inky.auto import auto
 
     inky_display = auto(ask_user=True, verbose=True)

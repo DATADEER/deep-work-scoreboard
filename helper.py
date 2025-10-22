@@ -1,5 +1,12 @@
 from collections import namedtuple
 
+def get_rect_size_by_content(circle_size, week_margin, day_margin, weeks_count, days_count):
+    NO_MARGIN_ON_LAST_DAY = 1
+    NO_MARGIN_ON_LAST_WEEK = 1
+    width = circle_size * days_count + day_margin * (days_count - NO_MARGIN_ON_LAST_DAY)
+    height = circle_size * weeks_count + week_margin * (weeks_count - NO_MARGIN_ON_LAST_WEEK)
+    return width, height
+
 def get_rect_center(upper_left_coords, lower_right_coords):
     (x_upper_left, y_upper_left) = upper_left_coords
     (x_lower_right, y_lower_right) = lower_right_coords
