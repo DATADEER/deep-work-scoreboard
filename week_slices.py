@@ -18,7 +18,7 @@ def get_current_weeks_slice():
 
 
     todays_slice = list(filter(lambda slice : is_date_in_slice(today, slice), slices_in_year))
-    return todays_slice
+    return todays_slice[0]
 
 
 def is_date_in_slice(date, slice):
