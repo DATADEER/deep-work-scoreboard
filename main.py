@@ -83,10 +83,10 @@ EMPTY_MONTH = [
     [0, 0, 0, 0, 0, 0, 0],
 ]
 
-fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
-
 # TODO: Make sure weeks slices always start on a monday
 weeks_slice = get_current_weeks_slice()
+
+fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
 
 FILLED_MONTH = [map_week(week_index, week, time_logs=fetched_time_logs) for (week_index, week) in enumerate(EMPTY_MONTH)]
 print("FILLED_MONTH",FILLED_MONTH)
