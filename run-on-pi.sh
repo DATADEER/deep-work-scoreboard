@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_FILE="~/cron.log"
+LOG_FILE="$HOME/deep-work-scoreboard/cron.log"
 
 echo "=== $(date) ===" >> "$LOG_FILE"
 
