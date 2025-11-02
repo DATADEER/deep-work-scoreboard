@@ -9,6 +9,8 @@ from supabase import create_client, Client
 
 load_dotenv()  # take environment variables
 
+print(f"Updating Scoreboard...")
+
 MONTH = [
     [0, 0, 0, 0, 0, 1, 1],
     [1, 1, 1, 1, 1, 0, 0],
@@ -21,6 +23,8 @@ MFD_USER_ID = os.getenv("MFD_USER_ID")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SECRET_KEY)
 
 def get_time_logs(week_start_date, week_end_date):
+    print(f"fetching latest time logs")
+
     response = (
         supabase.table("time_logs")
         .select("observation, start_datetime, created_by")
