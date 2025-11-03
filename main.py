@@ -1,6 +1,6 @@
 import argparse
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from week_slices import get_current_weeks_slice
 from image import get_image
@@ -23,14 +23,20 @@ MFD_USER_ID = os.getenv("MFD_USER_ID")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SECRET_KEY)
 
 def get_time_logs(week_start_date, week_end_date):
-    print(f"fetching latest time logs")
+    print(f"fetching latest time logs from {week_start_date} to {week_end_date}")
 
     response = (
         supabase.table("time_logs")
         .select("observation, start_datetime, created_by")
         .eq("created_by", MFD_USER_ID)
         .gte("start_datetime", week_start_date)
-        .lte("start_datetime", week_end_date)
+        # when calling
+        # .lte("start_datetime", week_end_date)
+        # supabase doens't fetch all necessary logs.
+        # likely becuase week_end_date implicitly has time set to 00:00:00
+        # TODO: find out how exactly query looks like when calling
+        # for now we set it to one day later to get all logs
+        .lt("start_datetime", week_end_date + timedelta(days=1))
         .execute()
     )
 
@@ -77,7 +83,6 @@ EMPTY_MONTH = [
     [0, 0, 0, 0, 0, 0, 0],
 ]
 
-# TODO: Make sure weeks slices always start on a monday
 weeks_slice = get_current_weeks_slice()
 
 fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
