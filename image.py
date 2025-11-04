@@ -1,7 +1,8 @@
 from PIL import Image, ImageDraw
 from helper import get_rect_center,get_centered_rect_bounds, get_rect_size_by_content
+from datetime import date
 
-def get_image(month):
+def get_image(month,weeks_slice, today=date.today()):
     WEEKS_PER_MONTH = len(month)  # 4
     DAYS_PER_WEEK = len(month[0])  # 7
 
@@ -9,7 +10,8 @@ def get_image(month):
     SCREEN_HEIGHT = 480
 
     CIRCLE_SIZE = 45
-    CIRCLE_OUTLINE_WIDTH = 3
+    CIRCLE_OUTLINE_WIDTH = 5
+    CIRCLE_OUTLINE_WIDTH_TODAY = 10
     WEEK_MARGIN = CIRCLE_SIZE / 3
     DAY_MARGIN = CIRCLE_SIZE / 3
 
@@ -23,11 +25,6 @@ def get_image(month):
     # BOUNDARY_HEIGHT = BOUNDARY_Y_LOWER_RIGHT - BOUNDARY_Y_UPPER_LEFT
     # FILL_SIZE = BOUNDARY_WIDTH
 
-    FILL_DEEP_WORK_DAY = (0, 0, 0)
-    OUTLINE_DEEP_WORK_DAY = None
-
-    FILL_NON_DEEP_WORK_DAY = (255, 255, 255)
-    OUTLINE_NON_DEEP_WORK_DAY = (0, 0, 0)
 
     # Create new PIL image with a white background
     image = Image.new("P", (SCREEN_WIDTH, SCREEN_HEIGHT), (255, 255, 255))
@@ -56,13 +53,40 @@ def get_image(month):
             day_x_lower_right = day_x_upper_left + CIRCLE_SIZE
             day_y_lower_right = day_y_upper_left + CIRCLE_SIZE
 
-            fill = FILL_DEEP_WORK_DAY if day == 1 else FILL_NON_DEEP_WORK_DAY
-            outline = OUTLINE_DEEP_WORK_DAY if day == 1 else OUTLINE_NON_DEEP_WORK_DAY
+            date = get_date_from_weeks_slice_by_index(weeks_slice, week_index, day_index)
+
+            fill = get_day_fill(day, date, today)
+            outline = get_day_outline(day, date, today)
 
             draw.ellipse((day_x_upper_left, day_y_upper_left, day_x_lower_right, day_y_lower_right),
-                         fill=fill, outline=outline, width=CIRCLE_OUTLINE_WIDTH)  # Circle (ellipse
+                         fill=fill, outline=outline, width=CIRCLE_OUTLINE_WIDTH_TODAY if date == today else CIRCLE_OUTLINE_WIDTH)  # Circle (ellipse
 
     # Debug Center
     # draw.ellipse((center, (center[0] + 10, center[1] + 10)), fill=(255, 0, 0))  # Circle (ellipse)
 
     return image
+
+def get_day_fill(day, date, today):
+
+    FILL_DEEP_WORK_DAY = (0, 0, 0)
+    FILL_NON_DEEP_WORK_DAY = (255, 255, 255)
+    FILL_PREVIOUS_NON_DEEP_WORK_DAY = (230,230,230)
+
+    isInPast = date < today
+
+    if day == 1: return FILL_DEEP_WORK_DAY
+    if isInPast: return FILL_PREVIOUS_NON_DEEP_WORK_DAY
+    return FILL_NON_DEEP_WORK_DAY
+
+def get_day_outline(day,date, today):
+    OUTLINE_DEEP_WORK_DAY = None
+    OUTLINE_NON_DEEP_WORK_DAY = (0, 0, 0)
+    OUTLINE_TODAY = (213, 62 ,79)
+
+    if date == today: return OUTLINE_TODAY
+    if day == 1: return OUTLINE_DEEP_WORK_DAY
+    return OUTLINE_NON_DEEP_WORK_DAY
+
+
+def get_date_from_weeks_slice_by_index(weeks_slice, week_index, day_index):
+    return weeks_slice[week_index * 7 + day_index]

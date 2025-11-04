@@ -83,7 +83,11 @@ EMPTY_MONTH = [
     [0, 0, 0, 0, 0, 0, 0],
 ]
 
-weeks_slice = get_current_weeks_slice()
+# for debugging other dates
+today = date.today()
+print("today", today)
+
+weeks_slice = get_current_weeks_slice(today)
 
 fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
 
@@ -94,7 +98,7 @@ parser = argparse.ArgumentParser(description='Image processor')
 parser.add_argument('--display', action='store_true', help='Render to Inky Impression screen')
 args = parser.parse_args()
 
-image = get_image(FILLED_MONTH)
+image = get_image(FILLED_MONTH, weeks_slice, today)
 
 if(args.display):
     print(f"printing {FILLED_MONTH} to inky impression")

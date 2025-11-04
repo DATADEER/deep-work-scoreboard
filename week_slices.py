@@ -3,7 +3,6 @@ from datetime import date, timedelta
 
 # get the currently displayed weeks (as slice of days) of this year
 def get_current_weeks_slice(today=date.today()):
-    print(today)
     first_day_of_year = today.replace(day=1, month=1)
     last_day_of_year = today.replace(day=31, month=12)
     slice_beginning = get_monday_around_start_of_year(first_day_of_year)
