@@ -7,6 +7,8 @@ from image import get_image
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+from PIL import Image, ImageDraw, ImageFont, ImageText
+
 load_dotenv()  # take environment variables
 
 print(f"Updating Scoreboard...")
@@ -49,24 +51,26 @@ def map_week(week_index,week, time_logs):
 def map_day(day_index, day, week_index, week, time_logs):
     week_slice_day_index = (week_index * len(week)) + day_index
     day_in_week_slice = weeks_slice[week_slice_day_index]
-    return 1 if has_deep_work_log(time_logs, day_in_week_slice) else 0
+    return 1 if has_focus_time_log(time_logs, day_in_week_slice) else 0
 
-def has_deep_work_log(time_logs, day: date):
-    deep_work_logs = [log for log in time_logs if is_deep_work_log_on_day(log, day)]
+def has_focus_time_log(time_logs, day: date):
+    deep_work_logs = [log for log in time_logs if is_focus_time_log_on_day(log, day)]
 
     if len(deep_work_logs) >= 1:
         return True
 
     return False
 
-def is_deep_work_log_on_day(time_log, day:date):
+def is_focus_time_log_on_day(time_log, day:date):
     if not time_log["observation"] : return False
     has_deep_work_label = "deep work" in time_log["observation"].lower()
+    has_deliberate_practice_label = "deliberate practice" in time_log["observation"].lower()
+    has_long_thinking_label = "long thinking" in time_log["observation"].lower()
     log_start_datetime: datetime = datetime.fromisoformat(time_log["start_datetime"])
     log_start_date: date = log_start_datetime.date()
     is_on_day = log_start_date == day
 
-    return has_deep_work_label & is_on_day
+    return (has_deep_work_label | has_deliberate_practice_label | has_long_thinking_label) & is_on_day
 
 # for testing without using network request
 MOCKED_MONTH = [
@@ -99,6 +103,16 @@ parser.add_argument('--display', action='store_true', help='Render to Inky Impre
 args = parser.parse_args()
 
 image = get_image(FILLED_MONTH, weeks_slice, today)
+
+font = ImageFont.truetype("fonts/BitcountGridSingle-Bold.ttf", 124)
+text = ImageText.Text("Hello world", font)
+text.embed_color()
+text.stroke(2, "#0f0")
+im = Image.new("RGB", text.get_bbox()[2:])
+d = ImageDraw.Draw(im)
+d.text((0, 0), text, "#f00")
+
+im.show()
 
 if(args.display):
     print(f"printing {FILLED_MONTH} to inky impression")
