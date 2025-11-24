@@ -7,8 +7,6 @@ from image import get_image
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-from PIL import Image, ImageDraw, ImageFont, ImageText
-
 load_dotenv()  # take environment variables
 
 print(f"Updating Scoreboard...")
@@ -103,16 +101,6 @@ parser.add_argument('--display', action='store_true', help='Render to Inky Impre
 args = parser.parse_args()
 
 image = get_image(FILLED_MONTH, weeks_slice, today)
-
-font = ImageFont.truetype("fonts/BitcountGridSingle-Bold.ttf", 124)
-text = ImageText.Text("Hello world", font)
-text.embed_color()
-text.stroke(2, "#0f0")
-im = Image.new("RGB", text.get_bbox()[2:])
-d = ImageDraw.Draw(im)
-d.text((0, 0), text, "#f00")
-
-im.show()
 
 if(args.display):
     print(f"printing {FILLED_MONTH} to inky impression")
