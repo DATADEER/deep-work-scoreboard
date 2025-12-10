@@ -64,11 +64,12 @@ def is_focus_time_log_on_day(time_log, day:date):
     has_deep_work_label = "deep work" in time_log["observation"].lower()
     has_deliberate_practice_label = "deliberate practice" in time_log["observation"].lower()
     has_long_thinking_label = "long thinking" in time_log["observation"].lower()
+    has_focus_session_label = "focus session" in time_log["observation"].lower()
     log_start_datetime: datetime = datetime.fromisoformat(time_log["start_datetime"])
     log_start_date: date = log_start_datetime.date()
     is_on_day = log_start_date == day
 
-    return (has_deep_work_label | has_deliberate_practice_label | has_long_thinking_label) & is_on_day
+    return (has_deep_work_label | has_deliberate_practice_label | has_long_thinking_label | has_focus_session_label) & is_on_day
 
 # for testing without using network request
 MOCKED_MONTH = [
