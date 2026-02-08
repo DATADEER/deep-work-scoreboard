@@ -1,13 +1,21 @@
+from math import floor
+from tkinter.constants import ROUND
+
 from PIL import Image, ImageDraw
 from helper import get_rect_center,get_centered_rect_bounds, get_rect_size_by_content
 from datetime import date
 
+# https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
+PILLOW_IMAGE_MODE = "RGB"
+
+# Screen Size
+
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 480
+
 def get_board_image(month, weeks_slice, today=date.today()):
     WEEKS_PER_MONTH = len(month)  # 4
     DAYS_PER_WEEK = len(month[0])  # 7
-
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 480
 
     CIRCLE_SIZE = 45
     CIRCLE_OUTLINE_WIDTH = 5
@@ -27,7 +35,7 @@ def get_board_image(month, weeks_slice, today=date.today()):
 
 
     # Create new PIL image with a white background
-    image = Image.new("RGB", (SCREEN_WIDTH, SCREEN_HEIGHT), (255, 255, 255))
+    image = Image.new(PILLOW_IMAGE_MODE, (SCREEN_WIDTH, SCREEN_HEIGHT), (255, 255, 255))
     draw = ImageDraw.Draw(image)
 
 
@@ -68,8 +76,8 @@ def get_board_image(month, weeks_slice, today=date.today()):
 
 def add_illustrations(image):
     illustration = Image.open('./illustrations/lamp2.png', 'r')
-    illustration.convert("RGB").show()
-    image.paste(illustration)
+    illustration.show()
+    image.paste(illustration, box = (floor(SCREEN_WIDTH/16), floor(SCREEN_HEIGHT/10)))
     return image
 
 
