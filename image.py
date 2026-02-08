@@ -83,7 +83,7 @@ def add_illustrations(image):
     print("from", available_illustrations_filenames, "chose", random_illustration)
     illustration = Image.open(f'{ILLSTURATION_PATH}/{random_illustration}', 'r')
     illustration = illustration.resize((80,80))
-    illustration = illustration.rotate(25)
+    illustration = illustration.rotate(25, expand=True)
     image.paste(illustration, box = (floor(SCREEN_WIDTH/10), floor(SCREEN_HEIGHT/10)), mask=illustration)
     return image
 
