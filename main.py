@@ -107,8 +107,6 @@ def is_activity_log_on_day(activity_log, day:date):
     log_start_date: date = datetime.strptime(activity_log["date"], "%Y-%m-%d").date()
     is_on_day = log_start_date == day
 
-    print(is_focus_observation(activity_log["observation"]), activity_log["observation"])
-
     return is_focus_observation(activity_log["observation"]) & is_on_day
 
 # for testing without using network request

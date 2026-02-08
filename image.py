@@ -1,3 +1,5 @@
+import os
+import random
 from math import floor
 from tkinter.constants import ROUND
 
@@ -75,9 +77,13 @@ def get_board_image(month, weeks_slice, today=date.today()):
     return image
 
 def add_illustrations(image):
-    illustration = Image.open('./illustrations/lamp2.png', 'r')
-    illustration.show()
-    image.paste(illustration, box = (floor(SCREEN_WIDTH/16), floor(SCREEN_HEIGHT/10)))
+    ILLSTURATION_PATH = "./illustrations"
+    available_illustrations_filenames = os.listdir(ILLSTURATION_PATH)
+    random_illustration = random.choice(available_illustrations_filenames)
+    print("from", available_illustrations_filenames, "chose", random_illustration)
+    illustration = Image.open(f'{ILLSTURATION_PATH}/{random_illustration}', 'r')
+    illustration = illustration.resize((80,80))
+    image.paste(illustration, box = (floor(SCREEN_WIDTH/13), floor(SCREEN_HEIGHT/10)))
     return image
 
 
