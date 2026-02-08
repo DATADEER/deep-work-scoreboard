@@ -42,14 +42,28 @@ def get_time_logs(week_start_date, week_end_date):
 
     return response.data
 
+def get_activity_logs(week_start_date, week_end_date):
+    print(f"fetching latest activity logs from {week_start_date} to {week_end_date}")
 
-def map_week(week_index,week, time_logs):
-    return [map_day(day_index, day, week_index, week, time_logs) for day_index, day in enumerate(week)]
+    response = (
+        supabase.table("activity_logs")
+        .select("observation, date")
+        .eq("created_by", MFD_USER_ID)
+        .gte("date", week_start_date)
+        .lt("date", week_end_date + timedelta(days=1))
+        .execute()
+    )
 
-def map_day(day_index, day, week_index, week, time_logs):
+    return response.data
+
+
+def map_week(week_index,week, time_logs, activity_logs):
+    return [map_day(day_index, day, week_index, week, time_logs, activity_logs) for day_index, day in enumerate(week)]
+
+def map_day(day_index, day, week_index, week, time_logs, activity_logs):
     week_slice_day_index = (week_index * len(week)) + day_index
     day_in_week_slice = weeks_slice[week_slice_day_index]
-    return 1 if has_focus_time_log(time_logs, day_in_week_slice) else 0
+    return 1 if has_focus_time_log(time_logs, day_in_week_slice) or has_focus_activity_log(activity_logs, day_in_week_slice) else 0
 
 def has_focus_time_log(time_logs, day: date):
     deep_work_logs = [log for log in time_logs if is_focus_time_log_on_day(log, day)]
@@ -59,17 +73,43 @@ def has_focus_time_log(time_logs, day: date):
 
     return False
 
+def has_focus_activity_log(activity_logs, day: date):
+    deep_work_logs = [log for log in activity_logs if is_activity_log_on_day(log, day)]
+
+    if len(deep_work_logs) >= 1:
+        return True
+
+    return False
+
+def is_focus_observation(observation):
+
+    text = observation.strip().lower()
+
+    has_deep_work_label = text.startswith("deep work")
+    has_deliberate_practice_label = text.startswith("deliberate practice")
+    has_long_thinking_label = text.startswith("long thinking")
+    has_focus_session_label = text.startswith("focus session")
+    has_reflection_session_label = text.startswith("reflection")
+
+    return has_deep_work_label | has_deliberate_practice_label | has_long_thinking_label | has_focus_session_label | has_reflection_session_label
+
 def is_focus_time_log_on_day(time_log, day:date):
     if not time_log["observation"] : return False
-    has_deep_work_label = "deep work" in time_log["observation"].lower()
-    has_deliberate_practice_label = "deliberate practice" in time_log["observation"].lower()
-    has_long_thinking_label = "long thinking" in time_log["observation"].lower()
-    has_focus_session_label = "focus session" in time_log["observation"].lower()
+
     log_start_datetime: datetime = datetime.fromisoformat(time_log["start_datetime"])
     log_start_date: date = log_start_datetime.date()
     is_on_day = log_start_date == day
 
-    return (has_deep_work_label | has_deliberate_practice_label | has_long_thinking_label | has_focus_session_label) & is_on_day
+    return is_focus_observation(time_log["observation"]) & is_on_day
+
+def is_activity_log_on_day(activity_log, day:date):
+    if not activity_log["observation"] : return False
+    log_start_date: date = datetime.strptime(activity_log["date"], "%Y-%m-%d").date()
+    is_on_day = log_start_date == day
+
+    print(is_focus_observation(activity_log["observation"]), activity_log["observation"])
+
+    return is_focus_observation(activity_log["observation"]) & is_on_day
 
 # for testing without using network request
 MOCKED_MONTH = [
@@ -92,9 +132,11 @@ print("today", today)
 
 weeks_slice = get_current_weeks_slice(today)
 
+# supports both time_logs and activity_logs
 fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
+fetched_activity_logs = get_activity_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
 
-FILLED_MONTH = [map_week(week_index, week, time_logs=fetched_time_logs) for (week_index, week) in enumerate(EMPTY_MONTH)]
+FILLED_MONTH = [map_week(week_index, week, time_logs=fetched_time_logs, activity_logs=fetched_activity_logs) for (week_index, week) in enumerate(EMPTY_MONTH)]
 
 # Determine how to render the image
 parser = argparse.ArgumentParser(description='Image processor')
