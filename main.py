@@ -3,7 +3,7 @@ import os
 from datetime import date, datetime, timedelta
 
 from week_slices import get_current_weeks_slice
-from image import get_image
+from image import get_board_image, add_illustrations
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -143,7 +143,8 @@ parser = argparse.ArgumentParser(description='Image processor')
 parser.add_argument('--display', action='store_true', help='Render to Inky Impression screen')
 args = parser.parse_args()
 
-image = get_image(FILLED_MONTH, weeks_slice, today)
+image = get_board_image(FILLED_MONTH, weeks_slice, today)
+image = add_illustrations(image)
 
 if(args.display):
     print(f"printing {FILLED_MONTH} to inky impression")

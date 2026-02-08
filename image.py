@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw
 from helper import get_rect_center,get_centered_rect_bounds, get_rect_size_by_content
 from datetime import date
 
-def get_image(month,weeks_slice, today=date.today()):
+def get_board_image(month, weeks_slice, today=date.today()):
     WEEKS_PER_MONTH = len(month)  # 4
     DAYS_PER_WEEK = len(month[0])  # 7
 
@@ -27,7 +27,7 @@ def get_image(month,weeks_slice, today=date.today()):
 
 
     # Create new PIL image with a white background
-    image = Image.new("P", (SCREEN_WIDTH, SCREEN_HEIGHT), (255, 255, 255))
+    image = Image.new("RGB", (SCREEN_WIDTH, SCREEN_HEIGHT), (255, 255, 255))
     draw = ImageDraw.Draw(image)
 
 
@@ -65,6 +65,14 @@ def get_image(month,weeks_slice, today=date.today()):
     # draw.ellipse((center, (center[0] + 10, center[1] + 10)), fill=(255, 0, 0))  # Circle (ellipse)
 
     return image
+
+def add_illustrations(image):
+    illustration = Image.open('./illustrations/lamp2.png', 'r')
+    illustration.convert("RGB").show()
+    image.paste(illustration)
+    return image
+
+
 
 def get_day_fill(day, date, today):
 
