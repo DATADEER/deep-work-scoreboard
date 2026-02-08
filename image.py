@@ -8,7 +8,7 @@ from helper import get_rect_center,get_centered_rect_bounds, get_rect_size_by_co
 from datetime import date
 
 # https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
-PILLOW_IMAGE_MODE = "RGB"
+PILLOW_IMAGE_MODE = "RGBA"
 
 # Screen Size
 
@@ -83,7 +83,8 @@ def add_illustrations(image):
     print("from", available_illustrations_filenames, "chose", random_illustration)
     illustration = Image.open(f'{ILLSTURATION_PATH}/{random_illustration}', 'r')
     illustration = illustration.resize((80,80))
-    image.paste(illustration, box = (floor(SCREEN_WIDTH/13), floor(SCREEN_HEIGHT/10)))
+    illustration = illustration.rotate(25)
+    image.paste(illustration, box = (floor(SCREEN_WIDTH/10), floor(SCREEN_HEIGHT/10)))
     return image
 
 
