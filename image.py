@@ -80,7 +80,7 @@ def add_illustrations(image):
     ILLSTURATION_PATH = "./illustrations"
     available_illustrations_filenames = os.listdir(ILLSTURATION_PATH)
     random_illustration = random.choice(available_illustrations_filenames)
-    print(f"dislplay {ILLSTURATION_PATH}/{random_illustration}")
+    print(f"display {ILLSTURATION_PATH}/{random_illustration}")
     illustration = Image.open(f'{ILLSTURATION_PATH}/{random_illustration}', 'r')
     illustration = illustration.resize((80,80))
     illustration = illustration.rotate(25, expand=True)
