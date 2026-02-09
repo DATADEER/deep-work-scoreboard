@@ -77,7 +77,7 @@ def get_board_image(month, weeks_slice, today=date.today()):
     return image
 
 def add_illustrations(image):
-    ILLSTURATION_PATH = f"{__file__}/illustrations"
+    ILLSTURATION_PATH = f"{os.getcwd()}/illustrations"
     available_illustrations_filenames = os.listdir(ILLSTURATION_PATH)
     random_illustration = random.choice(available_illustrations_filenames)
     print(f"display {ILLSTURATION_PATH}/{random_illustration}")
