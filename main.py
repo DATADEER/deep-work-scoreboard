@@ -124,33 +124,83 @@ EMPTY_MONTH = [
     [0, 0, 0, 0, 0, 0, 0],
 ]
 
-# for debugging other dates
-today = date.today()
-print("today", today)
+def fetch_and_render(inky_display):
+    global weeks_slice
+    today = date.today()
+    print("today", today)
+    weeks_slice = get_current_weeks_slice(today)
 
-weeks_slice = get_current_weeks_slice(today)
+    fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
+    fetched_activity_logs = get_activity_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
 
-# supports both time_logs and activity_logs
-fetched_time_logs = get_time_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
-fetched_activity_logs = get_activity_logs(week_start_date=weeks_slice[0], week_end_date=weeks_slice[-1])
+    filled_month = [
+        map_week(week_index, week, time_logs=fetched_time_logs, activity_logs=fetched_activity_logs)
+        for (week_index, week) in enumerate(EMPTY_MONTH)
+    ]
 
-FILLED_MONTH = [map_week(week_index, week, time_logs=fetched_time_logs, activity_logs=fetched_activity_logs) for (week_index, week) in enumerate(EMPTY_MONTH)]
+    image = get_board_image(filled_month, weeks_slice, today)
+    image = add_illustrations(image)
 
-# Determine how to render the image
+    if inky_display:
+        print(f"printing {filled_month} to inky impression")
+        inky_display.set_image(image)
+        inky_display.show()
+    else:
+        image.show()
+
+
+def log_focus_session():
+    print("Button A pressed — logging Focus session")
+    supabase.table("activity_logs").insert({
+        "date": date.today().isoformat(),
+        "duration_minutes": 60,
+        "observation": "Focus session",
+        "activity_type": "DESIRED",
+        "created_by": MFD_USER_ID,
+    }).execute()
+
+
+def seconds_until_next_hour():
+    now = datetime.now()
+    next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    return (next_hour - now).total_seconds()
+
+
 parser = argparse.ArgumentParser(description='Image processor')
 parser.add_argument('--display', action='store_true', help='Render to Inky Impression screen')
 args = parser.parse_args()
 
-image = get_board_image(FILLED_MONTH, weeks_slice, today)
-image = add_illustrations(image)
+SW_A = 5  # BCM GPIO 5 = button A on Inky Impression
 
-if(args.display):
-    print(f"printing {FILLED_MONTH} to inky impression")
+if args.display:
     from inky.auto import auto
+    import gpiod
+    import gpiodevice
+    from gpiod.line import Bias, Direction, Edge
 
     inky_display = auto(ask_user=True, verbose=True)
-    inky_display.set_image(image)
-    inky_display.show()
+    fetch_and_render(inky_display)
+
+    button_settings = gpiod.LineSettings(
+        direction=Direction.INPUT, bias=Bias.PULL_UP, edge_detection=Edge.FALLING
+    )
+    chip = gpiodevice.find_chip_by_platform()
+    offset = chip.line_offset_from_id(SW_A)
+    request = chip.request_lines(
+        consumer="deep-work-scoreboard",
+        config={offset: button_settings},
+    )
+
+    print("Listening for button A + hourly refresh…")
+    while True:
+        wait = timedelta(seconds=seconds_until_next_hour())
+        if request.wait_edge_events(timeout=wait):
+            for event in request.read_edge_events():
+                log_focus_session()
+                fetch_and_render(inky_display)
+        else:
+            print("Hourly refresh")
+            fetch_and_render(inky_display)
 else:
-    image.show()
+    fetch_and_render(None)
 
