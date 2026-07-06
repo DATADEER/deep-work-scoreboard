@@ -206,6 +206,7 @@ if args.display:
     print("Listening for button A + hourly refresh…")
     while True:
         wait = timedelta(seconds=seconds_until_next_hour())
+        #TODO: find out why this always triggers twice on a single button click
         if request.wait_edge_events(timeout=wait):
             for event in request.read_edge_events():
                 print("Pressed button A")
