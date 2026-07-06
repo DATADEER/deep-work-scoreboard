@@ -63,7 +63,10 @@ def map_week(week_index,week, time_logs, activity_logs):
 def map_day(day_index, day, week_index, week, time_logs, activity_logs):
     week_slice_day_index = (week_index * len(week)) + day_index
     day_in_week_slice = weeks_slice[week_slice_day_index]
-    return 1 if has_focus_time_log(time_logs, day_in_week_slice) or has_focus_activity_log(activity_logs, day_in_week_slice) else 0
+    return 1 if has_focus_log(time_logs, activity_logs, day_in_week_slice) else 0
+
+def has_focus_log(time_logs, activity_logs, day):
+    return has_focus_time_log(time_logs, day) or has_focus_activity_log(activity_logs, day)
 
 def has_focus_time_log(time_logs, day: date):
     deep_work_logs = [log for log in time_logs if is_focus_time_log_on_day(log, day)]
@@ -125,6 +128,7 @@ EMPTY_MONTH = [
 ]
 
 def fetch_and_render(inky_display):
+    print("Starting Fetch and Rerender...")
     global weeks_slice
     today = date.today()
     print("today", today)
@@ -149,8 +153,16 @@ def fetch_and_render(inky_display):
         image.show()
 
 
+def already_has_focus_session_today():
+    today = date.today()
+    print("Fetching focus sessions of " + today.strftime("DD.MM.YYYY"))
+    time_logs = get_time_logs(week_start_date=today, week_end_date=today)
+    activity_logs = get_activity_logs(week_start_date=today, week_end_date=today)
+
+    return has_focus_log(time_logs, activity_logs, today)
+
 def log_focus_session():
-    print("Button A pressed — logging Focus session")
+    print("Logging Focus session")
     supabase.table("activity_logs").insert({
         "date": date.today().isoformat(),
         "duration_minutes": 60,
@@ -196,8 +208,14 @@ if args.display:
         wait = timedelta(seconds=seconds_until_next_hour())
         if request.wait_edge_events(timeout=wait):
             for event in request.read_edge_events():
-                log_focus_session()
-                fetch_and_render(inky_display)
+                print("Pressed button A")
+                if already_has_focus_session_today():
+                    print("Already logged today")
+                    fetch_and_render(inky_display)
+                else:
+                    log_focus_session()
+                    fetch_and_render(inky_display)
+
         else:
             print("Hourly refresh")
             fetch_and_render(inky_display)
