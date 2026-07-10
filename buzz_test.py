@@ -139,27 +139,44 @@ EFFECTS = {
 # A short, distinct subset for the default demo.
 DEMO_EFFECTS = [1, 10, 12, 14, 47, 52, 58, 70, 118]
 
-# Celebration chains for completing a focus session. Each is a short phrase
-# played back-to-back on the DRV's 8-slot sequencer (max 8 steps), so every
-# waveform finishes before the next starts — it feels like one gesture.
-# Steps: ("e", effect_id) fires a waveform, ("p", seconds) inserts a pause.
-CELEBRATIONS = [
-    ("Level Up", "rising clicks into a strong buzz", [
+# Celebration chains for completing a focus session. Each phrase plays on the
+# DRV's 8-slot sequencer; longer lists auto-split into consecutive phrases.
+# Steps: ("e", effect_id) fires a waveform, ("p", seconds) pauses,
+# ("h", seconds) holds a sustained buzz — the lever for long, escalating tails.
+CELEBRATIONS = {
+    "level-up": ("Level Up", "rising clicks into a strong buzz", [
         ("e", 3), ("e", 2), ("e", 1), ("p", 0.1), ("e", 14),
     ]),
-    ("Fanfare", "click, double-click, then a triumphant buzz", [
+    "fanfare": ("Fanfare", "click, double-click, then a triumphant buzz", [
         ("e", 1), ("p", 0.15), ("e", 10), ("p", 0.15), ("e", 14),
     ]),
-    ("Heartbeat", "two strong pulses landing on a buzz", [
+    "heartbeat": ("Heartbeat", "two strong pulses landing on a buzz", [
         ("e", 52), ("e", 52), ("p", 0.1), ("e", 14),
     ]),
-    ("Whoosh Pop", "a rising ramp that pops at the top", [
+    "whoosh-pop": ("Whoosh Pop", "a rising ramp that pops at the top", [
         ("e", 84), ("e", 4), ("p", 0.1), ("e", 10),
     ]),
-    ("Victory Roll", "ticks accelerating into a buzz and a final hit", [
+    "victory-roll": ("Victory Roll", "ticks accelerating into a buzz and a final hit", [
         ("e", 24), ("e", 25), ("e", 26), ("e", 47), ("e", 1),
     ]),
-]
+    "whoosh-long": ("Whoosh Pop Long",
+        "a long rising sweep, a pop, then a 2.5s sustained buzz tail", [
+        ("e", 82), ("e", 83), ("e", 88), ("e", 4), ("p", 0.05),
+        ("e", 14), ("h", 2.5),
+    ]),
+    "whoosh-intense": ("Whoosh Pop Intense",
+        "an aggressive all-100% rise with repeated pops", [
+        ("e", 88), ("e", 1), ("e", 4), ("p", 0.05),
+        ("e", 14), ("e", 47), ("e", 1),
+    ]),
+    "whoosh-mega": ("Whoosh Pop Mega",
+        "three escalating whooshes into a 3s buzz finale", [
+        ("e", 84), ("e", 4), ("p", 0.15),
+        ("e", 84), ("e", 4), ("p", 0.15),
+        ("e", 82), ("e", 88), ("e", 1), ("p", 0.1),
+        ("e", 14), ("e", 47), ("h", 3.0),
+    ]),
+}
 
 def play(drv, effect):
     print(f"{effect:>3}: {EFFECTS.get(effect, '?')}")
@@ -168,14 +185,46 @@ def play(drv, effect):
     time.sleep(1)  # let the effect finish before the next one
     drv.stop()
 
-def play_chain(drv, steps):
-    for i, (kind, value) in enumerate(steps):
+def _phrase_duration(batch):
+    # play() is non-blocking; wait long enough not to clip the tail.
+    # pauses are exact; treat each waveform as ~0.5s (long ramps/buzzes run long).
+    pauses = sum(value for kind, value in batch if kind == "p")
+    effects = sum(1 for kind, value in batch if kind == "e")
+    return pauses + 0.5 * effects + 0.2
+
+def _play_phrase(drv, batch):
+    if not batch:
+        return
+    for i, (kind, value) in enumerate(batch):
         drv.sequence[i] = (adafruit_drv2605.Effect(value) if kind == "e"
                            else adafruit_drv2605.Pause(value))
-    if len(steps) < 8:  # terminate so stale slots from a prior chain don't play
-        drv.sequence[len(steps)] = adafruit_drv2605.Effect(0)
+    if len(batch) < 8:  # terminate so stale slots from a prior phrase don't play
+        drv.sequence[len(batch)] = adafruit_drv2605.Effect(0)
     drv.play()
-    time.sleep(2)  # play() is non-blocking; wait out the phrase
+    time.sleep(_phrase_duration(batch))
+
+def _hold_buzz(drv, seconds):
+    drv.sequence[0] = adafruit_drv2605.Effect(118)  # long buzz until stopped
+    drv.sequence[1] = adafruit_drv2605.Effect(0)
+    drv.play()
+    time.sleep(seconds)
+    drv.stop()
+
+def play_chain(drv, steps):
+    # Buffer effect/pause steps into 8-slot sequencer phrases; ("h", secs)
+    # flushes the buffer and holds a sustained buzz for long, arbitrary tails.
+    batch = []
+    for kind, value in steps:
+        if kind == "h":
+            _play_phrase(drv, batch)
+            batch = []
+            _hold_buzz(drv, value)
+        else:
+            batch.append((kind, value))
+            if len(batch) == 8:
+                _play_phrase(drv, batch)
+                batch = []
+    _play_phrase(drv, batch)
 
 def main():
     parser = argparse.ArgumentParser(description="Buzz the DRV2605L motor")
@@ -183,8 +232,8 @@ def main():
                         help="single effect number 1-123 (default: short demo)")
     parser.add_argument("--all", action="store_true",
                         help="play every effect 1-123 in order")
-    parser.add_argument("--celebrate", action="store_true",
-                        help="play the five focus-session celebration chains")
+    parser.add_argument("--celebrate", nargs="?", const="all", metavar="NAME",
+                        help="play a celebration chain by name (default all; 'list' to list)")
     args = parser.parse_args()
 
     i2c = busio.I2C(board.SCL, board.SDA)
@@ -192,8 +241,19 @@ def main():
     print("DRV2605 connected")
 
     if args.celebrate:
-        for name, description, steps in CELEBRATIONS:
-            print(f"* {name}: {description}")
+        if args.celebrate == "list":
+            for slug, (title, description, _) in CELEBRATIONS.items():
+                print(f"{slug}: {title} — {description}")
+            return
+        if args.celebrate == "all":
+            chosen = list(CELEBRATIONS.items())
+        elif args.celebrate in CELEBRATIONS:
+            chosen = [(args.celebrate, CELEBRATIONS[args.celebrate])]
+        else:
+            print(f"unknown '{args.celebrate}' — try: --celebrate list")
+            return
+        for slug, (title, description, steps) in chosen:
+            print(f"* {title}: {description}")
             play_chain(drv, steps)
             time.sleep(0.8)
         print("done")
