@@ -139,6 +139,28 @@ EFFECTS = {
 # A short, distinct subset for the default demo.
 DEMO_EFFECTS = [1, 10, 12, 14, 47, 52, 58, 70, 118]
 
+# Celebration chains for completing a focus session. Each is a short phrase
+# played back-to-back on the DRV's 8-slot sequencer (max 8 steps), so every
+# waveform finishes before the next starts — it feels like one gesture.
+# Steps: ("e", effect_id) fires a waveform, ("p", seconds) inserts a pause.
+CELEBRATIONS = [
+    ("Level Up", "rising clicks into a strong buzz", [
+        ("e", 3), ("e", 2), ("e", 1), ("p", 0.1), ("e", 14),
+    ]),
+    ("Fanfare", "click, double-click, then a triumphant buzz", [
+        ("e", 1), ("p", 0.15), ("e", 10), ("p", 0.15), ("e", 14),
+    ]),
+    ("Heartbeat", "two strong pulses landing on a buzz", [
+        ("e", 52), ("e", 52), ("p", 0.1), ("e", 14),
+    ]),
+    ("Whoosh Pop", "a rising ramp that pops at the top", [
+        ("e", 84), ("e", 4), ("p", 0.1), ("e", 10),
+    ]),
+    ("Victory Roll", "ticks accelerating into a buzz and a final hit", [
+        ("e", 24), ("e", 25), ("e", 26), ("e", 47), ("e", 1),
+    ]),
+]
+
 def play(drv, effect):
     print(f"{effect:>3}: {EFFECTS.get(effect, '?')}")
     drv.sequence[0] = adafruit_drv2605.Effect(effect)
@@ -146,17 +168,36 @@ def play(drv, effect):
     time.sleep(1)  # let the effect finish before the next one
     drv.stop()
 
+def play_chain(drv, steps):
+    for i, (kind, value) in enumerate(steps):
+        drv.sequence[i] = (adafruit_drv2605.Effect(value) if kind == "e"
+                           else adafruit_drv2605.Pause(value))
+    if len(steps) < 8:  # terminate so stale slots from a prior chain don't play
+        drv.sequence[len(steps)] = adafruit_drv2605.Effect(0)
+    drv.play()
+    time.sleep(2)  # play() is non-blocking; wait out the phrase
+
 def main():
     parser = argparse.ArgumentParser(description="Buzz the DRV2605L motor")
     parser.add_argument("effect", nargs="?", type=int,
                         help="single effect number 1-123 (default: short demo)")
     parser.add_argument("--all", action="store_true",
                         help="play every effect 1-123 in order")
+    parser.add_argument("--celebrate", action="store_true",
+                        help="play the five focus-session celebration chains")
     args = parser.parse_args()
 
     i2c = busio.I2C(board.SCL, board.SDA)
     drv = adafruit_drv2605.DRV2605(i2c)
     print("DRV2605 connected")
+
+    if args.celebrate:
+        for name, description, steps in CELEBRATIONS:
+            print(f"* {name}: {description}")
+            play_chain(drv, steps)
+            time.sleep(0.8)
+        print("done")
+        return
 
     if args.all:
         effects = list(EFFECTS)
