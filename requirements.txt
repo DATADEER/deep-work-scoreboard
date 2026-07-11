@@ -4,3 +4,4 @@ pillow==12.0.0
 gpiod
 gpiodevice
 adafruit-circuitpython-drv2605
+adafruit-circuitpython-tca9548a
