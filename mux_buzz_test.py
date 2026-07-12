@@ -1,5 +1,6 @@
 import argparse
 import time
+from itertools import cycle
 
 import board
 import busio
@@ -70,6 +71,19 @@ def ticktock(left, right, seconds=15):
         fire(left if i % 2 == 0 else right, 24)  # sharp tick
         time.sleep(interval)
 
+def mario(left, right):
+    # The DRV2605 plays fixed haptic effects, not pitches, so the Super Mario
+    # Bros. theme lands as its rhythm: each 'x' is a sharp buzz on one 16th-note
+    # cell, '.' is silence. Buzzes bounce left/right for a stereo feel.
+    tempo = 0.14
+    riff = "x.x..x.xx...x..."  # E E . E . C E G . . . g . . . — the opening phrase
+    sides = cycle((left, right))
+    for _ in range(2):
+        for cell in riff:
+            if cell == "x":
+                fire(next(sides), 1)  # strong click per note
+            time.sleep(tempo)
+
 PATTERNS = {
     "unison": ("Unison", "both sides buzz together", unison),
     "alternate": ("Alternate", "left/right call-and-response", alternate),
@@ -77,6 +91,7 @@ PATTERNS = {
     "pingpong": ("Ping-Pong", "accelerating bounce into a unison slam", pingpong),
     "overlap": ("Overlap", "one side hums while the other taps over it", overlap),
     "ticktock": ("Tick-Tock", "clock: left tick / right tock for N seconds", ticktock),
+    "mario": ("Mario", "Super Mario theme riff as stereo buzzes", mario),
 }
 
 def main():
